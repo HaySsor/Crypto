@@ -1,6 +1,6 @@
 <template>
   <div class="list">
-    <div v-if="!ERROR">
+    <div v-if="!myERROR">
       <div class="list__box" v-if="flag">
         <div
           class="list__box-item"
@@ -82,57 +82,54 @@
 
 <script>
 import ErrorView from "@/views/childrenView/ErrorView.vue";
+import { getCrypto, getCryptoInfo } from "../data/getDataFromAPI";
+import { onMounted, ref } from "vue";
 export default {
   name: "CryptoData",
   components: { ErrorView },
-  data() {
-    return {
-      dataOfPrice: null,
-      about: [],
-      flag: false,
-      percentageChanges: false,
-      ERROR: false,
-    };
-  },
-  methods: {
-    cryptoPrice(value) {
+  setup() {
+    const myERROR = ref(false);
+    const { dataOfPrice, getCryptoData } = getCrypto();
+    const { about, flag, getCryptoInfoData } = getCryptoInfo();
+
+    function cryptoPrice(value) {
       const price = Number(value)
         .toFixed(2)
         .toString()
         .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       return price;
-    },
-    getPercent(value) {
+    }
+    function getPercent(value) {
       const price = Number(value).toFixed(2);
       return price;
-    },
-    getImg(value) {
-      const img = this.about[value].logo;
-      return img;
-    },
-    PercentChange(value) {
-      return value < 0;
-    },
-    async getCrypto() {
-      const res = await fetch("http://localhost:3000/coin-data");
-      const data = await res.json();
-      this.dataOfPrice = data.data;
-    },
-    async getCryptoInfo() {
-      const res = await fetch("http://localhost:3000/info");
-      const data = await res.json();
-      this.about = data.data;
-      this.flag = true;
-    },
-  },
-  async mounted() {
-    try {
-      await this.getCrypto();
-      await this.getCryptoInfo();
-    } catch (err) {
-      console.log(err);
-      this.ERROR = true;
     }
+    function getImg(value) {
+      const img = about.value[value]?.logo;
+      return img;
+    }
+    function PercentChange(value) {
+      return value < 0;
+    }
+
+    onMounted(async () => {
+      try {
+        await getCryptoData();
+        await getCryptoInfoData();
+      } catch (err) {
+        console.log(err);
+        myERROR.value = true;
+      }
+    });
+
+    return {
+      cryptoPrice,
+      getPercent,
+      getImg,
+      PercentChange,
+      myERROR,
+      flag,
+      dataOfPrice,
+    };
   },
 };
 </script>
